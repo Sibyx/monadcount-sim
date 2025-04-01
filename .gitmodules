@@ -1,0 +1,6 @@
+[submodule "extern/ns3-src"]
+	path = extern/ns3-src
+	url = https://gitlab.com/nsnam/ns-3-dev.git
+[submodule "extern/nlohmann_json"]
+	path = extern/nlohmann_json
+	url = https://github.com/nlohmann/json.git
