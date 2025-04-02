@@ -9,12 +9,12 @@
 #include "PointGeometry.hpp"
 #include "PolygonGeometry.hpp"
 
-NS_LOG_COMPONENT_DEFINE ("Ns3EnvironmentBuilder");
+NS_LOG_COMPONENT_DEFINE ("ScenarioEnvironmentBuilder");
 
-std::unique_ptr<Ns3Environment> Ns3EnvironmentBuilder::Build(const std::vector<std::unique_ptr<Feature>> &features)
+std::unique_ptr<ScenarioEnvironment> ScenarioEnvironmentBuilder::Build(const std::vector<std::unique_ptr<Feature>> &features)
 {
     NS_LOG_INFO ("Building NS-3 Environment from Features...");
-    auto env = std::make_unique<Ns3Environment>();
+    auto env = std::make_unique<ScenarioEnvironment>();
 
     // Loop over each Feature and build the corresponding ns-3 object or dynamic actor.
     for (const auto &f : features)
@@ -50,7 +50,7 @@ std::unique_ptr<Ns3Environment> Ns3EnvironmentBuilder::Build(const std::vector<s
     return env;
 }
 
-void Ns3EnvironmentBuilder::createApNode(const Feature &feature, Ns3Environment &env)
+void ScenarioEnvironmentBuilder::createApNode(const Feature &feature, ScenarioEnvironment &env)
 {
     ns3::Ptr<ns3::Node> node = ns3::CreateObject<ns3::Node>();
 
@@ -76,7 +76,7 @@ void Ns3EnvironmentBuilder::createApNode(const Feature &feature, Ns3Environment 
     NS_LOG_DEBUG ("AP node created. Total APs: " << env.apNodes.GetN());
 }
 
-void Ns3EnvironmentBuilder::createSnifferNode(const Feature &feature, Ns3Environment &env)
+void ScenarioEnvironmentBuilder::createSnifferNode(const Feature &feature, ScenarioEnvironment &env)
 {
     ns3::Ptr<ns3::Node> node = ns3::CreateObject<ns3::Node>();
 
@@ -102,7 +102,7 @@ void Ns3EnvironmentBuilder::createSnifferNode(const Feature &feature, Ns3Environ
     NS_LOG_DEBUG ("Sniffer node created. Total sniffers: " << env.snifferNodes.GetN());
 }
 
-void Ns3EnvironmentBuilder::createTerminalNode(const Feature &feature, Ns3Environment &env)
+void ScenarioEnvironmentBuilder::createTerminalNode(const Feature &feature, ScenarioEnvironment &env)
 {
     ns3::Ptr<ns3::Node> node = ns3::CreateObject<ns3::Node>();
 
@@ -128,7 +128,7 @@ void Ns3EnvironmentBuilder::createTerminalNode(const Feature &feature, Ns3Enviro
     NS_LOG_DEBUG ("Terminal node created. Total terminals: " << env.terminalNodes.GetN());
 }
 
-void Ns3EnvironmentBuilder::createObstacle(const Feature &feature, Ns3Environment &env)
+void ScenarioEnvironmentBuilder::createObstacle(const Feature &feature, ScenarioEnvironment &env)
 {
     Obstacle obs;
     obs.id = feature.getId();
@@ -137,7 +137,7 @@ void Ns3EnvironmentBuilder::createObstacle(const Feature &feature, Ns3Environmen
     NS_LOG_DEBUG ("Obstacle created with id " << obs.id << ". Total obstacles: " << env.obstacles.size());
 }
 
-void Ns3EnvironmentBuilder::createSeat(const Feature &feature, Ns3Environment &env)
+void ScenarioEnvironmentBuilder::createSeat(const Feature &feature, ScenarioEnvironment &env)
 {
     Seat seat;
     seat.id = feature.getId();
@@ -157,7 +157,7 @@ void Ns3EnvironmentBuilder::createSeat(const Feature &feature, Ns3Environment &e
     NS_LOG_DEBUG ("Seat created with id " << seat.id << ". Total seats: " << env.seats.size());
 }
 
-void Ns3EnvironmentBuilder::createDoor(const Feature &feature, Ns3Environment &env)
+void ScenarioEnvironmentBuilder::createDoor(const Feature &feature, ScenarioEnvironment &env)
 {
     Door door;
     door.id = feature.getId();

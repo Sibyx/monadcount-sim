@@ -55,8 +55,8 @@ flowchart TD
     A[GeoJSON File] --> B[GeoJSONParser]
     B --> C((List of Feature Objects))
 
-    C --> D[Ns3EnvironmentBuilder]
-    D --> E((Ns3Environment))
+    C --> D[ScenarioEnvironmentBuilder]
+    D --> E((ScenarioEnvironment))
 
 %% Environment internal collections
     E --> E1[AP Nodes]

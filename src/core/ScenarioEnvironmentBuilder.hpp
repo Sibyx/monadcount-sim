@@ -11,19 +11,19 @@
 #include "Feature.hpp" // Adjust the path as needed.
 #include "ScenarioEnvironment.hpp"
 
-class Ns3EnvironmentBuilder {
+class ScenarioEnvironmentBuilder {
 public:
     // Build the environment from the parsed Feature objects.
-    std::unique_ptr<Ns3Environment> Build(const std::vector<std::unique_ptr<Feature>> &features);
+    std::unique_ptr<ScenarioEnvironment> Build(const std::vector<std::unique_ptr<Feature>> &features);
 
 private:
     // Helper methods for each feature type.
-    void createApNode(const Feature &feature, Ns3Environment &env);
-    void createSnifferNode(const Feature &feature, Ns3Environment &env);
-    void createTerminalNode(const Feature &feature, Ns3Environment &env);
-    void createObstacle(const Feature &feature, Ns3Environment &env);
-    void createSeat(const Feature &feature, Ns3Environment &env);
-    void createDoor(const Feature &feature, Ns3Environment &env);
+    void createApNode(const Feature &feature, ScenarioEnvironment &env);
+    void createSnifferNode(const Feature &feature, ScenarioEnvironment &env);
+    void createTerminalNode(const Feature &feature, ScenarioEnvironment &env);
+    void createObstacle(const Feature &feature, ScenarioEnvironment &env);
+    void createSeat(const Feature &feature, ScenarioEnvironment &env);
+    void createDoor(const Feature &feature, ScenarioEnvironment &env);
 };
 
 

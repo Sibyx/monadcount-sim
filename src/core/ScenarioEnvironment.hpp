@@ -35,7 +35,7 @@ struct Door {
     Door() : x(0.0), y(0.0) {}
 };
 
-class Ns3Environment {
+class ScenarioEnvironment {
 public:
     // NodeContainers for different device types.
     ns3::NodeContainer apNodes;       // Access Points
