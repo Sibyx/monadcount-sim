@@ -1,43 +1,51 @@
 #include "ns3/core-module.h"
-#include "GeoJsonParser.hpp"
-#include "ScenarioEnvironmentBuilder.hpp"
-#include "experiments/BasicExperiment.hpp"
+#include "ScenarioFactory.hpp"
+#include "BasicExperiment.hpp"
+#include "DoorToDoorExperiment.hpp"
 
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE ("MonadCountSim");
+NS_LOG_COMPONENT_DEFINE("MonadCountSim");
+
+// Register all available scenarios
+void RegisterScenarios() {
+    auto& factory = ScenarioFactory::Instance();
+    factory.RegisterScenario<BasicExperiment>("basic");
+    factory.RegisterScenario<DoorToDoorExperiment>("doortodoor");
+}
 
 int main(int argc, char *argv[])
 {
     ns3::LogComponentEnable("MonadCountSim", ns3::LOG_LEVEL_INFO);
     ns3::LogComponentEnable("ScenarioEnvironmentBuilder", ns3::LOG_LEVEL_INFO);
 
+    // Register all available scenarios
+    RegisterScenarios();
+
+    // Default scenario name
+    std::string scenarioName = "basic";
+    std::string scenarioFile;
+
     CommandLine cmd(__FILE__);
-    std::string scenarioFile = "geojson/room.geo.json"; // default GeoJSON path
-    cmd.AddValue("scenario", "Path to the GeoJSON file describing the scenario", scenarioFile);
+    cmd.AddValue("scenario", "Name of the scenario to run", scenarioName);
+    cmd.AddValue("input", "Path to the GeoJSON file describing the scenario (optional)", scenarioFile);
     cmd.Parse(argc, argv);
 
-    NS_LOG_INFO ("Starting simulation environment build...");
+    // Create the requested scenario
+    auto& factory = ScenarioFactory::Instance();
+    auto scenario = factory.CreateScenario(scenarioName);
 
-    GeoJSONParser parser;
-    auto features = parser.parseFile(scenarioFile);
+    if (!scenario) {
+        NS_LOG_ERROR("Unknown scenario: " << scenarioName);
+        NS_LOG_INFO("Available scenarios:");
+        for (const auto& name : factory.GetAvailableScenarios()) {
+            NS_LOG_INFO("  - " << name);
+        }
+        return 1;
+    }
 
-    ScenarioEnvironmentBuilder builder;
-    std::unique_ptr<ScenarioEnvironment> env = builder.Build(features);
-
-    // 3. Log environment details.
-//    NS_LOG_INFO ("AP count: " << env->apNodes.GetN());
-//    NS_LOG_INFO ("Sniffer count: " << env->snifferNodes.GetN());
-//    NS_LOG_INFO ("Terminal count: " << env->terminalNodes.GetN());
-//    NS_LOG_INFO ("Obstacles: " << env->obstacles.size());
-//    NS_LOG_INFO ("Seats: " << env->seats.size());
-//    NS_LOG_INFO ("Doors: " << env->doors.size());
-
-//    ns3::Simulator::Run();
-//    ns3::Simulator::Destroy();
-
-    BasicExperiment experiment;
-    experiment.Run(env);
+    NS_LOG_INFO("Running scenario: " << scenarioName);
+    scenario->Execute(scenarioFile);
 
     return 0;
 }

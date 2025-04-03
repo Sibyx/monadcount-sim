@@ -15,6 +15,7 @@ set(NS3_LIB_DIR ${CMAKE_SOURCE_DIR}/extern/ns3-dist/lib)
 # Project headers.
 include_directories(${CMAKE_SOURCE_DIR}/src/core)
 include_directories(${CMAKE_SOURCE_DIR}/src/models)
+include_directories(${CMAKE_SOURCE_DIR}/src/experiments)
 
 # ns-3 includes (both built and source)
 include_directories(${NS3_INCLUDE_DIR})

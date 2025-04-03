@@ -1,19 +1,18 @@
-//
-// Created by Jakub Dubec on 01/04/2025.
-//
-
 #ifndef MONADCOUNT_SIM_DOORTODOOREXPERIMENT_HPP
 #define MONADCOUNT_SIM_DOORTODOOREXPERIMENT_HPP
 
-#include "Scenario.hpp"
-
+#include "Scenario.hpp"  // Updated path to match project structure
 
 class DoorToDoorExperiment : public Scenario {
 public:
     DoorToDoorExperiment();
-    virtual ~DoorToDoorExperiment() = default;
-    virtual void Run(ScenarioEnvironment &env) override;
-};
+    ~DoorToDoorExperiment() override = default;
 
+protected:
+    void Run(ScenarioEnvironment &env) override;
+
+private:
+    double m_simulationTime;
+};
 
 #endif //MONADCOUNT_SIM_DOORTODOOREXPERIMENT_HPP
