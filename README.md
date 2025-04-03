@@ -1,10 +1,101 @@
 # MonadCountSim: Indoor GeoJSON-based NS-3 environment
 
-**Work in progress**
+**Work in Progress - PhD Sanity Optional**
 
-The codebase sucks bigly. Will improve soon. Me wanna PhD.
+A simulation framework for indoor environments using GeoJSON and NS-3. Uses fancy algorithms to model pedestrian 
+movement, Wi-Fi signal propagation, and general chaos.
+
+## Architecture
+
+```mermaid
+flowchart TD
+    A[GeoJSON File] --> B[GeoJSONParser]
+    B --> C((Feature Objects))
+    C --> D[EnvironmentBuilder]
+    D --> E((ScenarioEnvironment))
+
+    E --> E1[AP Nodes]
+    E --> E2[Obstacles]
+    E --> E3[Seats]
+    E --> E4[Doors]
+    E --> E5[Terminals]
+    E --> E6[EventDispatcher]
+
+    K[Scenario Manager] --> I
+    K -->|Monitors events| E6
+    K -->|Controls spawn rate| F
+
+    E4 --> F[Door]
+    F --> I[PedestrianFactory]
+    I --> J[Pedestrian]
+    J -- "Events" --> E6
+    
+    style A fill:#ffd,stroke:#333
+    style B fill:#ccf,stroke:#333
+    style D fill:#ccf,stroke:#333
+    style E fill:#afa,stroke:#333
+    style F fill:#fcc,stroke:#333
+    style I fill:#cfc,stroke:#333
+    style J fill:#cfc,stroke:#333
+    style K fill:#ccf,stroke:#333
+```
 
 ## Install
+
+**Pre-requisites:**
+
+- C++20 compatible compiler
+- CMake 3.14+
+- Git
+
+### Step 1: Clone the Repository with Submodules
+
+
+```shell
+git clone https://github.com/Sibyx/monadcount-sim.git
+cd monadcount-sim
+git submodule update --init --recursive
+```
+
+### Step 2: Build dependencies
+
+```shell
+make all
+```
+
+This will:
+
+- Build NS-3 from the submodule
+- Install NS-3 to the local `extern/ns3-dist` directory
+- Configure and build the MonadCountSim project
+
+**Alternative: Step-by-Step Build**
+
+```shell
+# Build NS-3
+make ns3
+
+# Build MonadCountSim
+make build
+```
+
+## Running the Simulation
+
+```shell
+# Run the default scenario
+bin/monadcount-sim
+
+# Run with a specific scenario and GeoJSON input
+bin/monadcount-sim --scenario=basic --input=geojson/room.geo.json
+```
+
+## LEGACY: Project & Toolchain Setup
+
+This part of readme is for now just a note for me, to not forget how to set up the project and toolchain.
+
+Use just for troubleshooting, not for normal development.
+
+### Project creation from scratch
 
 ```shell
 git submodule add https://gitlab.com/nsnam/ns-3-dev.git extern/ns3-src
@@ -14,27 +105,7 @@ cd extern/ns3-src && git checkout tags/ns-3.43
 cd extern/nlohmann_json && git checkout tags/v3.11.3
 ```
 
-## Toolchain Setup
-
-### Using ExternalProject
-
-```cmake
-include(ExternalProject)
-
-# =======================================================================
-# Build ns-3 as an external project using its own build system (waf).
-# =======================================================================
-ExternalProject_Add(ns3
-        SOURCE_DIR ${CMAKE_SOURCE_DIR}/extern/ns-3
-        CONFIGURE_COMMAND ./ns3 configure --enable-examples --enable-tests --enable-mpi
-        BUILD_COMMAND ./ns3 build
-        INSTALL_COMMAND ""
-        # Build in source because ns-3 uses its own directory structure.
-        BUILD_IN_SOURCE 1
-)
-```
-
-
+### Manual NS-3 build
 
 ```shell
 # Sync submodules
@@ -48,56 +119,4 @@ cd extern/ns3-src
 ./ns3 install
 
 # Execute cmake: TBD
-```
-
-```mermaid
-flowchart TD
-    A[GeoJSON File] --> B[GeoJSONParser]
-    B --> C((List of Feature Objects))
-
-    C --> D[ScenarioEnvironmentBuilder]
-    D --> E((ScenarioEnvironment))
-
-%% Environment internal collections
-    E --> E1[AP Nodes]
-    E --> E2[Obstacles]
-    E --> E3[Seats]
-    E --> E4[Doors]
-    E --> E5[Terminals]
-    E --> E6[EventDispatcher]
-
-%% Dynamic Actors
-    E4 --> F[Door]
-    E3 --> G[Seat]
-    E5 --> H[Terminal]
-    F --> I[PedestrianFactory]
-    I --> J[Pedestrian]
-
-%% Event flow
-    J -- "hitSeat" --> G
-    J -- "foundDoor" --> F
-    H -- "taskEvent" --> J
-    F -- "spawnRequest" --> I
-    I -- "pedestrianSpawned" --> J
-    E6 -- "control events" --> F
-    E6 -- "global events" --> J
-
-%% Scenario Manager
-    K[Scenario Manager]
-    K --> I
-    K -->|Monitors events| E6
-    K -->|Controls spawn rate| F
-
-    style A fill:#ffd,stroke:#333,stroke-width:1px
-    style B fill:#ccf,stroke:#333,stroke-width:1px
-    style C fill:#afa,stroke:#333,stroke-width:1px
-    style D fill:#ccf,stroke:#333,stroke-width:1px
-    style E fill:#afa,stroke:#333,stroke-width:1px
-    style F fill:#fcc,stroke:#333,stroke-width:1px
-    style G fill:#fcc,stroke:#333,stroke-width:1px
-    style H fill:#fcc,stroke:#333,stroke-width:1px
-    style I fill:#cfc,stroke:#333,stroke-width:1px
-    style J fill:#cfc,stroke:#333,stroke-width:1px
-    style K fill:#ccf,stroke:#333,stroke-width:1px
-
 ```
