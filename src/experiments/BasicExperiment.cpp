@@ -6,7 +6,8 @@
 #include "ns3/wifi-module.h"
 #include "ns3/applications-module.h"
 
-// #include "ScenarioEnvironment.hpp" // If you need your own scenario/environment headers
+// If you have a "ScenarioEnvironment.hpp" or other headers, include them here.
+// #include "ScenarioEnvironment.hpp"
 
 using namespace ns3;
 
@@ -22,95 +23,195 @@ BasicExperiment::BasicExperiment()
 
 void BasicExperiment::Run(ScenarioEnvironment &env)
 {
-    // Create nodes: a set of station nodes + one AP node
-    NodeContainer wifiStaNodes;
-    wifiStaNodes.Create(m_numPedestrians);
+    // --------------------------------------------------
+    // 1) Create Nodes
+    // --------------------------------------------------
+    NodeContainer wifiApNodes;
+    wifiApNodes.Create(2); // two APs
 
-    NodeContainer wifiApNode;
-    wifiApNode.Create(1);
+    // First set of station nodes (half)
+    NodeContainer wifiStaNodes1;
+    uint32_t half = m_numPedestrians / 2;
+    wifiStaNodes1.Create(half);
 
-    // Create channel + PHY
-    YansWifiChannelHelper channel = YansWifiChannelHelper::Default();
-    YansWifiPhyHelper phy;
-    phy.SetChannel(channel.Create());
+    // Second set of station nodes (the rest)
+    NodeContainer wifiStaNodes2;
+    wifiStaNodes2.Create(m_numPedestrians - half);
 
-    // Configure Wi-Fi
+    // --------------------------------------------------
+    // 2) Separate Wi-Fi Channels
+    // --------------------------------------------------
+    // AP #1 + its stations on channel1/phy1
+    YansWifiChannelHelper channel1 = YansWifiChannelHelper::Default();
+    YansWifiPhyHelper phy1;
+    phy1.SetChannel(channel1.Create());
+
+    // AP #2 + its stations on channel2/phy2
+    // (Could vary propagation parameters or frequency if desired)
+    YansWifiChannelHelper channel2 = YansWifiChannelHelper::Default();
+    YansWifiPhyHelper phy2;
+    phy2.SetChannel(channel2.Create());
+
+    // --------------------------------------------------
+    // 3) Configure Wi-Fi
+    // --------------------------------------------------
     WifiHelper wifi;
     wifi.SetStandard(WIFI_STANDARD_80211g);
     wifi.SetRemoteStationManager("ns3::AarfWifiManager");
 
-    // Create Wi-Fi MAC for stations
-    WifiMacHelper mac;
+    // We'll still use the same SSID for simplicity—
+    // but note that with physically separate channels, stations won't roam between them in practice.
     Ssid ssid = Ssid("eduroam");
 
-    mac.SetType("ns3::StaWifiMac",
-                "Ssid", SsidValue(ssid),
-                "ActiveProbing", BooleanValue(true));
-    NetDeviceContainer staDevices = wifi.Install(phy, mac, wifiStaNodes);
+    // 3a) AP #1
+    WifiMacHelper macAp1;
+    macAp1.SetType("ns3::ApWifiMac",
+                   "Ssid", SsidValue(ssid));
+    NetDeviceContainer apDevice1 = wifi.Install(phy1, macAp1, wifiApNodes.Get(0));
 
-    // Create Wi-Fi MAC for AP
-    mac.SetType("ns3::ApWifiMac",
-                "Ssid", SsidValue(ssid));
-    NetDeviceContainer apDevice = wifi.Install(phy, mac, wifiApNode);
+    // 3b) AP #2
+    WifiMacHelper macAp2;
+    macAp2.SetType("ns3::ApWifiMac",
+                   "Ssid", SsidValue(ssid));
+    NetDeviceContainer apDevice2 = wifi.Install(phy2, macAp2, wifiApNodes.Get(1));
 
-    // Mobility setup
-    MobilityHelper mobility;
-    mobility.SetPositionAllocator(
+    // 3c) Stations for AP #1
+    WifiMacHelper macSta1;
+    macSta1.SetType("ns3::StaWifiMac",
+                    "Ssid", SsidValue(ssid),
+                    "ActiveProbing", BooleanValue(true));
+    NetDeviceContainer staDevices1 = wifi.Install(phy1, macSta1, wifiStaNodes1);
+
+    // 3d) Stations for AP #2
+    WifiMacHelper macSta2;
+    macSta2.SetType("ns3::StaWifiMac",
+                    "Ssid", SsidValue(ssid),
+                    "ActiveProbing", BooleanValue(true));
+    NetDeviceContainer staDevices2 = wifi.Install(phy2, macSta2, wifiStaNodes2);
+
+    // --------------------------------------------------
+    // 4) Mobility
+    // --------------------------------------------------
+    // (a) APs - stationary
+    MobilityHelper mobilityAp;
+    mobilityAp.SetMobilityModel("ns3::ConstantPositionMobilityModel");
+    mobilityAp.Install(wifiApNodes);
+
+    // Position AP #1 near the center
+    Ptr<MobilityModel> apMob1 = wifiApNodes.Get(0)->GetObject<MobilityModel>();
+    apMob1->SetPosition(Vector(m_roomLength / 2, m_roomWidth / 2, 2.0));
+
+    // Position AP #2 a bit to the right
+    Ptr<MobilityModel> apMob2 = wifiApNodes.Get(1)->GetObject<MobilityModel>();
+    apMob2->SetPosition(Vector((m_roomLength / 2) + 20.0, m_roomWidth / 2, 2.0));
+
+    // (b) Stations #1
+    MobilityHelper mobilitySta1;
+    mobilitySta1.SetPositionAllocator(
             "ns3::RandomRectanglePositionAllocator",
             "X", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + std::to_string(m_roomLength) + "]"),
             "Y", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + std::to_string(m_roomWidth) + "]")
     );
+    mobilitySta1.SetMobilityModel("ns3::RandomWalk2dMobilityModel",
+                                  "Bounds", RectangleValue(Rectangle(0, m_roomLength, 0, m_roomWidth)),
+                                  "Speed", StringValue("ns3::UniformRandomVariable[Min=0.5|Max=1.5]"));
+    mobilitySta1.Install(wifiStaNodes1);
 
-    mobility.SetMobilityModel("ns3::RandomWalk2dMobilityModel",
-                              "Bounds", RectangleValue(Rectangle(0, m_roomLength, 0, m_roomWidth)),
-                              "Speed", StringValue("ns3::UniformRandomVariable[Min=0.5|Max=1.5]"));
-    mobility.Install(wifiStaNodes);
+    // (c) Stations #2
+    MobilityHelper mobilitySta2;
+    mobilitySta2.SetPositionAllocator(
+            "ns3::RandomRectanglePositionAllocator",
+            "X", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + std::to_string(m_roomLength) + "]"),
+            "Y", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + std::to_string(m_roomWidth) + "]")
+    );
+    mobilitySta2.SetMobilityModel("ns3::RandomWalk2dMobilityModel",
+                                  "Bounds", RectangleValue(Rectangle(0, m_roomLength, 0, m_roomWidth)),
+                                  "Speed", StringValue("ns3::UniformRandomVariable[Min=0.5|Max=1.5]"));
+    mobilitySta2.Install(wifiStaNodes2);
 
-    // AP is stationary in the center
-    mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
-    mobility.Install(wifiApNode);
-    Ptr<MobilityModel> apMobility = wifiApNode.Get(0)->GetObject<MobilityModel>();
-    apMobility->SetPosition(Vector(m_roomLength / 2, m_roomWidth / 2, 2));
-
-    // Install IP stack
+    // --------------------------------------------------
+    // 5) Internet Stack + Multiple Subnets
+    // --------------------------------------------------
     InternetStackHelper stack;
-    stack.Install(wifiApNode);
-    stack.Install(wifiStaNodes);
+    stack.Install(wifiApNodes);
+    stack.Install(wifiStaNodes1);
+    stack.Install(wifiStaNodes2);
 
-    // Assign IP addresses
-    Ipv4AddressHelper address;
-    address.SetBase("10.1.1.0", "255.255.255.0");
-    Ipv4InterfaceContainer staInterfaces = address.Assign(staDevices);
-    Ipv4InterfaceContainer apInterfaces = address.Assign(apDevice);
+    // Subnet 1: 10.1.1.x for AP #1 + stations #1
+    Ipv4AddressHelper address1;
+    address1.SetBase("10.1.1.0", "255.255.255.0");
+    Ipv4InterfaceContainer ap1Interfaces = address1.Assign(apDevice1);
+    Ipv4InterfaceContainer sta1Interfaces = address1.Assign(staDevices1);
 
-    // Use UdpEchoServerHelper instead of UdpServerHelper
-    uint16_t port = 7; // port 7 is traditionally labeled "echo" by Wireshark
-    UdpEchoServerHelper echoServer(port);
+    // Subnet 2: 10.1.2.x for AP #2 + stations #2
+    Ipv4AddressHelper address2;
+    address2.SetBase("10.1.2.0", "255.255.255.0");
+    Ipv4InterfaceContainer ap2Interfaces = address2.Assign(apDevice2);
+    Ipv4InterfaceContainer sta2Interfaces = address2.Assign(staDevices2);
 
-    // Install the echo server on the AP
-    ApplicationContainer serverApp = echoServer.Install(wifiApNode.Get(0));
+    // Populate routing (for cross-subnet traffic)
+    Ipv4GlobalRoutingHelper::PopulateRoutingTables();
+
+    // --------------------------------------------------
+    // 6) Applications
+    // --------------------------------------------------
+    // 6a) UDP Echo on AP #1
+    uint16_t echoPort = 7;
+    UdpEchoServerHelper echoServer(echoPort);
+    ApplicationContainer serverApp = echoServer.Install(wifiApNodes.Get(0)); // AP #1
     serverApp.Start(Seconds(0.0));
     serverApp.Stop(Seconds(m_simulationTime));
 
-    // Use UdpEchoClientHelper instead of UdpClientHelper
-    UdpEchoClientHelper echoClient(apInterfaces.GetAddress(0), port);
+    // Echo clients from stations #1 to AP #1
+    UdpEchoClientHelper echoClient(ap1Interfaces.GetAddress(0), echoPort);
     echoClient.SetAttribute("MaxPackets", UintegerValue(4294967295u));
     echoClient.SetAttribute("Interval", TimeValue(Seconds(1.0)));
     echoClient.SetAttribute("PacketSize", UintegerValue(1024));
 
-    // Install echo clients on each station node
     ApplicationContainer clientApps;
-    for (uint32_t i = 0; i < wifiStaNodes.GetN(); ++i)
+    for (uint32_t i = 0; i < wifiStaNodes1.GetN(); ++i)
     {
-        clientApps.Add(echoClient.Install(wifiStaNodes.Get(i)));
+        clientApps.Add(echoClient.Install(wifiStaNodes1.Get(i)));
     }
     clientApps.Start(Seconds(1.0));
     clientApps.Stop(Seconds(m_simulationTime));
 
-    // Enable pcap tracing on the AP device
-    phy.EnablePcap("pedestrian_wifi", apDevice);
+    // 6b) OnOff UDP on AP #2
+    // We'll send traffic from stations #2 to AP #2
+    uint16_t onOffPort = 9000;
+    OnOffHelper onOffUdp("ns3::UdpSocketFactory",
+                         InetSocketAddress(ap2Interfaces.GetAddress(0), onOffPort));
+    onOffUdp.SetAttribute("DataRate", StringValue("2Mbps"));
+    onOffUdp.SetAttribute("PacketSize", UintegerValue(512));
+    onOffUdp.SetAttribute("OnTime",  StringValue("ns3::ConstantRandomVariable[Constant=1]"));
+    onOffUdp.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
 
-    // Run the simulation
+    ApplicationContainer onOffApps;
+    for (uint32_t i = 0; i < wifiStaNodes2.GetN(); ++i)
+    {
+        auto app = onOffUdp.Install(wifiStaNodes2.Get(i));
+        app.Start(Seconds(2.0 + 0.2 * i));
+        app.Stop(Seconds(m_simulationTime));
+        onOffApps.Add(app);
+    }
+
+    // A sink on AP #2 to receive OnOff traffic
+    PacketSinkHelper sinkUdp("ns3::UdpSocketFactory",
+                             InetSocketAddress(Ipv4Address::GetAny(), onOffPort));
+    ApplicationContainer sinkApp = sinkUdp.Install(wifiApNodes.Get(1)); // AP #2
+    sinkApp.Start(Seconds(0.0));
+    sinkApp.Stop(Seconds(m_simulationTime));
+
+    // --------------------------------------------------
+    // 7) Tracing (PCAP)
+    // --------------------------------------------------
+    // We'll enable pcap on the device(s) for each AP
+    phy1.EnablePcap("pedestrian_wifi_ap1", apDevice1);
+    phy2.EnablePcap("pedestrian_wifi_ap2", apDevice2);
+
+    // --------------------------------------------------
+    // 8) Run
+    // --------------------------------------------------
     Simulator::Stop(Seconds(m_simulationTime));
     NS_LOG_INFO("Running Simulation...");
     Simulator::Run();
