@@ -4,3 +4,6 @@
 [submodule "extern/nlohmann_json"]
 	path = extern/nlohmann_json
 	url = https://github.com/nlohmann/json.git
+[submodule "extern/netanim"]
+	path = extern/netanim
+	url = https://gitlab.com/nsnam/netanim.git

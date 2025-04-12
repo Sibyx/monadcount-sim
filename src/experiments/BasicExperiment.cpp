@@ -1,4 +1,5 @@
 // NS-3 Simulation: Pedestrian Wi-Fi Mobility with Association and RSSI
+#include <ns3/animation-interface.h>
 #include "BasicExperiment.hpp"
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
@@ -84,6 +85,7 @@ void BasicExperiment::Run(monadcount_sim::core::ScenarioEnvironment &env) {
     clientApps.Stop(Seconds(m_simulationTime));
 
     phy.EnablePcap("pedestrian_wifi", apDevice);
+    AnimationInterface anim("netanim.xml");
 
     Simulator::Stop(Seconds(m_simulationTime));
 

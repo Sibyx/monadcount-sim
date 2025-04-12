@@ -75,6 +75,8 @@ This will:
 # Build NS-3
 make ns3
 
+# Build netanim
+
 # Build MonadCountSim
 make build
 ```
@@ -87,6 +89,9 @@ bin/monadcount-sim
 
 # Run with a specific scenario and GeoJSON input
 bin/monadcount-sim --scenario=basic --input=geojson/room.geo.json
+
+# Open simulation using netanim
+bin/netanim netanim.xml
 ```
 
 ## LEGACY: Project & Toolchain Setup
@@ -100,6 +105,7 @@ Use just for troubleshooting, not for normal development.
 ```shell
 git submodule add https://gitlab.com/nsnam/ns-3-dev.git extern/ns3-src
 git submodule add https://github.com/nlohmann/json.git extern/nlohmann_json
+git submodule add https://gitlab.com/nsnam/netanim.git extern/netanim
 
 cd extern/ns3-src && git checkout tags/ns-3.43
 cd extern/nlohmann_json && git checkout tags/v3.11.3

@@ -19,6 +19,8 @@ find_package(ns3 REQUIRED
         NO_DEFAULT_PATH  # Avoid using system-wide ns-3 installations
 )
 
+add_subdirectory(${CMAKE_SOURCE_DIR}/extern/netanim)
+
 # =======================================================================
 # Project Subdirectories
 # =======================================================================
@@ -44,6 +46,7 @@ target_link_libraries(monadcount_sim
         ns3::mobility
         ns3::applications
         ns3::wifi
+        ns3::netanim
 
         # Simulation libraries:
         monadcount_sim::factories_pedestrians
