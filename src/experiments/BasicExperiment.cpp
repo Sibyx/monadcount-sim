@@ -206,9 +206,13 @@ void BasicExperiment::Run(monadcount_sim::core::ScenarioEnvironment &env)
     // 7) Tracing (PCAP)
     // --------------------------------------------------
     // We'll enable pcap on the device(s) for each AP
+    phy1.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
     phy1.EnablePcap("pedestrian_wifi_ap1", apDevice1);
+
+    phy2.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
     phy2.EnablePcap("pedestrian_wifi_ap2", apDevice2);
     AnimationInterface anim("netanim.xml");
+    anim.SetMaxPktsPerTraceFile(500000);
 
     // --------------------------------------------------
     // 8) Run
