@@ -3,3 +3,4 @@ cmake-*/
 *.DS_Store
 extern/ns3-dist
 build/
+data/

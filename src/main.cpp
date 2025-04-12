@@ -2,7 +2,10 @@
 #include "experiments/BasicExperiment.hpp"
 #include "experiments/DoorToDoorExperiment.hpp"
 #include "monadcount_sim/core/ScenarioFactory.hpp"
+#include "experiments/HandoverExperiment.hpp"
+#include <system_error>
 
+namespace fs = std::filesystem;
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE("MonadCountSim");
@@ -12,6 +15,7 @@ void RegisterScenarios() {
     auto& factory = monadcount_sim::core::ScenarioFactory::Instance();
     factory.RegisterScenario<BasicExperiment>("basic");
     factory.RegisterScenario<DoorToDoorExperiment>("doortodoor");
+    factory.RegisterScenario<HandoverExperiment>("handover");
 }
 
 int main(int argc, char *argv[])
@@ -30,6 +34,15 @@ int main(int argc, char *argv[])
     cmd.AddValue("scenario", "Name of the scenario to run", scenarioName);
     cmd.AddValue("input", "Path to the GeoJSON file describing the scenario (optional)", scenarioFile);
     cmd.Parse(argc, argv);
+
+    // Create data directory
+    fs::path nestedDir = "data/" + scenarioName;
+    try {
+        fs::create_directories(nestedDir);
+    } catch (const fs::filesystem_error& e) {
+        NS_LOG_ERROR("Filesystem error: " << e.what());
+        return 1;
+    }
 
     // Create the requested scenario
     auto& factory = monadcount_sim::core::ScenarioFactory::Instance();

@@ -1,6 +1,7 @@
 add_library(monadcount_sim_experiments
         BasicExperiment.cpp
         DoorToDoorExperiment.cpp
+        HandoverExperiment.cpp
 )
 
 target_include_directories(monadcount_sim_experiments PUBLIC

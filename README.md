@@ -90,8 +90,10 @@ bin/monadcount-sim
 # Run with a specific scenario and GeoJSON input
 bin/monadcount-sim --scenario=basic --input=geojson/room.geo.json
 
+# output of simulation is in data/* 
+
 # Open simulation using netanim
-bin/netanim netanim.xml
+bin/netanim data/basic/netanim.xml
 ```
 
 ## LEGACY: Project & Toolchain Setup
