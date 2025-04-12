@@ -136,7 +136,7 @@ HandoverExperiment::SetupMobility()
     apMob2->SetPosition(Vector(45.0, m_roomWidth / 2.0, 2.0)); // AP2 near right.
 
     // (b) Set pedestrian mobility.
-    // Group A: Start at left, move right.
+    // Group A: Starting at the left end, moving to the right.
     MobilityHelper mobilityGroupA;
     mobilityGroupA.SetMobilityModel("ns3::ConstantVelocityMobilityModel");
     mobilityGroupA.SetPositionAllocator("ns3::RandomRectanglePositionAllocator",
@@ -144,7 +144,7 @@ HandoverExperiment::SetupMobility()
                                         "Y", StringValue("ns3::UniformRandomVariable[Min=5.0|Max=25.0]"));
     mobilityGroupA.Install(m_groupA);
 
-    // Group B: Start at right, move left.
+    // Group B: Starting at the right end, moving to the left.
     MobilityHelper mobilityGroupB;
     mobilityGroupB.SetMobilityModel("ns3::ConstantVelocityMobilityModel");
     mobilityGroupB.SetPositionAllocator("ns3::RandomRectanglePositionAllocator",
@@ -152,19 +152,36 @@ HandoverExperiment::SetupMobility()
                                         "Y", StringValue("ns3::UniformRandomVariable[Min=5.0|Max=25.0]"));
     mobilityGroupB.Install(m_groupB);
 
-    // Set individual velocities.
+    // Create a uniform random variable stream for the y-axis velocity.
+    Ptr<UniformRandomVariable> uvA = CreateObject<UniformRandomVariable> ();
+    uvA->SetAttribute("Min", DoubleValue(-0.5));
+    uvA->SetAttribute("Max", DoubleValue(0.5));
+
+    Ptr<UniformRandomVariable> uvB = CreateObject<UniformRandomVariable> ();
+    uvB->SetAttribute("Min", DoubleValue(-0.5));
+    uvB->SetAttribute("Max", DoubleValue(0.5));
+
+    // Set individual velocities for Group A with random y component.
     for (uint32_t i = 0; i < m_groupA.GetN(); ++i)
     {
         Ptr<ConstantVelocityMobilityModel> cvm = m_groupA.Get(i)->GetObject<ConstantVelocityMobilityModel>();
-        if (cvm) {
-            cvm->SetVelocity(Vector(1.0, 0.0, 0.0)); // Rightward.
+        if (cvm)
+        {
+            double vy = uvA->GetValue(); // Random y velocity in [-0.5, 0.5]
+            // For Group A, x-velocity is 1.0 (moving right).
+            cvm->SetVelocity(Vector(1.0, vy, 0.0));
         }
     }
+
+    // Set individual velocities for Group B with random y component.
     for (uint32_t i = 0; i < m_groupB.GetN(); ++i)
     {
         Ptr<ConstantVelocityMobilityModel> cvm = m_groupB.Get(i)->GetObject<ConstantVelocityMobilityModel>();
-        if (cvm) {
-            cvm->SetVelocity(Vector(-1.0, 0.0, 0.0)); // Leftward.
+        if (cvm)
+        {
+            double vy = uvB->GetValue(); // Random y velocity in [-0.5, 0.5]
+            // For Group B, x-velocity is -1.0 (moving left).
+            cvm->SetVelocity(Vector(-1.0, vy, 0.0));
         }
     }
 }
