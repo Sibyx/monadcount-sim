@@ -43,12 +43,17 @@ void BasicExperiment::Run(monadcount_sim::core::ScenarioEnvironment &env)
     // --------------------------------------------------
     // AP #1 + its stations on channel1/phy1
     YansWifiChannelHelper channel1 = YansWifiChannelHelper::Default();
+    channel1.SetPropagationDelay("ns3::ConstantSpeedPropagationDelayModel");
+    channel1.AddPropagationLoss("ns3::NakagamiPropagationLossModel");
     YansWifiPhyHelper phy1;
     phy1.SetChannel(channel1.Create());
 
     // AP #2 + its stations on channel2/phy2
     // (Could vary propagation parameters or frequency if desired)
     YansWifiChannelHelper channel2 = YansWifiChannelHelper::Default();
+    channel2.SetPropagationDelay("ns3::ConstantSpeedPropagationDelayModel");
+    channel2.AddPropagationLoss("ns3::NakagamiPropagationLossModel");
+
     YansWifiPhyHelper phy2;
     phy2.SetChannel(channel2.Create());
 
