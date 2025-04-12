@@ -114,47 +114,51 @@ HandoverExperiment::SetupWifi()
 void
 HandoverExperiment::SetupMobility()
 {
-    // (a) Static AP positions.
+    // (a) Set AP positions at opposite sides of the room.
     MobilityHelper mobilityAp;
     mobilityAp.SetMobilityModel("ns3::ConstantPositionMobilityModel");
     mobilityAp.Install(m_wifiApNodes);
     Ptr<MobilityModel> apMob1 = m_wifiApNodes.Get(0)->GetObject<MobilityModel>();
-    apMob1->SetPosition(Vector(10.0, m_roomWidth / 2.0, 2.0));
+    // Place AP1 near the left end.
+    apMob1->SetPosition(Vector(5.0, m_roomWidth / 2.0, 2.0));
     Ptr<MobilityModel> apMob2 = m_wifiApNodes.Get(1)->GetObject<MobilityModel>();
-    apMob2->SetPosition(Vector(40.0, m_roomWidth / 2.0, 2.0));
+    // Place AP2 near the right end.
+    apMob2->SetPosition(Vector(45.0, m_roomWidth / 2.0, 2.0));
 
-    // (b) Pedestrian mobility.
-    // Group A: Moving from left to right.
+    // (b) Set pedestrian mobility.
+    // Group A: Starting at the left end, moving to the right.
     MobilityHelper mobilityGroupA;
     mobilityGroupA.SetMobilityModel("ns3::ConstantVelocityMobilityModel");
     mobilityGroupA.SetPositionAllocator("ns3::RandomRectanglePositionAllocator",
-                                        "X", StringValue("ns3::UniformRandomVariable[Min=5.0|Max=15.0]"),
-                                        "Y", StringValue("ns3::UniformRandomVariable[Min=10.0|Max=20.0]"));
+                                        "X", StringValue("ns3::UniformRandomVariable[Min=0.0|Max=10.0]"),
+                                        "Y", StringValue("ns3::UniformRandomVariable[Min=5.0|Max=25.0]"));
     mobilityGroupA.Install(m_groupA);
 
-    // Group B: Moving from right to left.
+    // Group B: Starting at the right end, moving to the left.
     MobilityHelper mobilityGroupB;
     mobilityGroupB.SetMobilityModel("ns3::ConstantVelocityMobilityModel");
     mobilityGroupB.SetPositionAllocator("ns3::RandomRectanglePositionAllocator",
-                                        "X", StringValue("ns3::UniformRandomVariable[Min=35.0|Max=45.0]"),
-                                        "Y", StringValue("ns3::UniformRandomVariable[Min=10.0|Max=20.0]"));
+                                        "X", StringValue("ns3::UniformRandomVariable[Min=40.0|Max=50.0]"),
+                                        "Y", StringValue("ns3::UniformRandomVariable[Min=5.0|Max=25.0]"));
     mobilityGroupB.Install(m_groupB);
 
-    // Set initial velocities with slight vertical variations.
+    // Set group velocities.
+    // Group A: moves rightward.
     for (uint32_t i = 0; i < m_groupA.GetN(); ++i)
     {
         Ptr<ConstantVelocityMobilityModel> cvm = m_groupA.Get(i)->GetObject<ConstantVelocityMobilityModel>();
         if (cvm)
         {
-            cvm->SetVelocity(Vector(1.0, 0.2 * ((i % 3) - 1), 0.0)); // Rightward
+            cvm->SetVelocity(Vector(1.0, 0.0, 0.0)); // Pure rightward
         }
     }
+    // Group B: moves leftward.
     for (uint32_t i = 0; i < m_groupB.GetN(); ++i)
     {
         Ptr<ConstantVelocityMobilityModel> cvm = m_groupB.Get(i)->GetObject<ConstantVelocityMobilityModel>();
         if (cvm)
         {
-            cvm->SetVelocity(Vector(-1.0, 0.2 * ((i % 3) - 1), 0.0)); // Leftward
+            cvm->SetVelocity(Vector(-1.0, 0.0, 0.0)); // Pure leftward
         }
     }
 }
@@ -170,7 +174,7 @@ HandoverExperiment::SetupInternet()
     Ipv4AddressHelper address;
     address.SetBase("10.1.1.0", "255.255.255.0");
 
-    // Assign IP addresses to AP nodes using the stored NetDeviceContainer.
+    // Assign IP addresses to AP devices using the stored NetDeviceContainer.
     Ipv4InterfaceContainer apInterfaces = address.Assign(m_apDevices);
 
     // Populate routing tables.
@@ -191,8 +195,8 @@ HandoverExperiment::SetupApplications()
     serverApp2.Start(Seconds(0.0));
     serverApp2.Stop(Seconds(m_simulationTime));
 
-    // Configure UDP Echo Clients for the pedestrian nodes.
-    // Group A uses AP1; Group B uses AP2.
+    // Configure UDP Echo Clients on the pedestrian nodes.
+    // Group A uses AP1 (10.1.1.1) and Group B uses AP2 (10.1.1.2).
     UdpEchoClientHelper echoClient1(Ipv4Address("10.1.1.1"), echoPort);
     echoClient1.SetAttribute("MaxPackets", UintegerValue(4294967295u));
     echoClient1.SetAttribute("Interval", TimeValue(Seconds(1.0)));
@@ -228,7 +232,7 @@ HandoverExperiment::SetupTracing()
     m_anim->UpdateNodeColor(m_wifiApNodes.Get(1)->GetId(), 255, 0, 0);   // Dark red for AP2.
 
     // Enable PCAP generation for each AP device and each station device.
-    YansWifiPhyHelper wifiPhyHelper;
+    YansWifiPhyHelper wifiPhyHelper; // Use a local instance to call EnablePcap for each device.
     // Iterate over AP devices.
     for (uint32_t i = 0; i < m_apDevices.GetN(); ++i)
     {
