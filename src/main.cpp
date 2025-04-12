@@ -1,7 +1,7 @@
 #include "ns3/core-module.h"
-#include "ScenarioFactory.hpp"
-#include "BasicExperiment.hpp"
-#include "DoorToDoorExperiment.hpp"
+#include "experiments/BasicExperiment.hpp"
+#include "experiments/DoorToDoorExperiment.hpp"
+#include "monadcount_sim/core/ScenarioFactory.hpp"
 
 using namespace ns3;
 
@@ -9,7 +9,7 @@ NS_LOG_COMPONENT_DEFINE("MonadCountSim");
 
 // Register all available scenarios
 void RegisterScenarios() {
-    auto& factory = ScenarioFactory::Instance();
+    auto& factory = monadcount_sim::core::ScenarioFactory::Instance();
     factory.RegisterScenario<BasicExperiment>("basic");
     factory.RegisterScenario<DoorToDoorExperiment>("doortodoor");
 }
@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     cmd.Parse(argc, argv);
 
     // Create the requested scenario
-    auto& factory = ScenarioFactory::Instance();
+    auto& factory = monadcount_sim::core::ScenarioFactory::Instance();
     auto scenario = factory.CreateScenario(scenarioName);
 
     if (!scenario) {

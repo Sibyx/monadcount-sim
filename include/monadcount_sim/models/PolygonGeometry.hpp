@@ -9,10 +9,12 @@
 #include "PointGeometry.hpp"
 #include <vector>
 
-class PolygonGeometry : public Geometry {
-public:
-    std::vector<std::vector<Point>> rings;
-    std::string getType() const override { return "Polygon"; }
-};
+namespace monadcount_sim::models {
+    class PolygonGeometry : public Geometry {
+    public:
+        std::vector<std::vector<Point>> rings;
+        std::string getType() const override { return "Polygon"; }
+    };
+}
 
 #endif //MONADCOUNT_SIM_POLYGONGEOMETRY_HPP

@@ -7,10 +7,12 @@
 
 #include <string>
 
-class Geometry {
-public:
-    virtual ~Geometry() = default;
-    virtual std::string getType() const = 0;
-};
+namespace monadcount_sim::models {
+    class Geometry {
+    public:
+        virtual ~Geometry() = default;
+        virtual std::string getType() const = 0;
+    };
+}
 
 #endif //MONADCOUNT_SIM_GEOMETRY_HPP

@@ -6,12 +6,12 @@
 #include "ns3/mobility-helper.h"
 #include "ns3/vector.h"
 #include "ns3/log.h"
-#include "RandomWalkDoorPedestrianFactory.hpp"
+#include "monadcount_sim/factories/pedestrians/RandomWalkDoorPedestrianFactory.hpp"
 
 NS_LOG_COMPONENT_DEFINE ("RandomWalkDoorPedestrianFactory");
 
-ns3::Ptr<ns3::Node> RandomWalkDoorPedestrianFactory::Spawn(const Door &door,
-                                                                 ScenarioEnvironment &env)
+ns3::Ptr<ns3::Node> monadcount_sim::factories::pedestrians::RandomWalkDoorPedestrianFactory::Spawn(const monadcount_sim::core::Door &door,
+                                                                 monadcount_sim::core::ScenarioEnvironment &env)
 {
     ns3::Ptr<ns3::Node> node = ns3::CreateObject<ns3::Node>();
 

@@ -6,6 +6,7 @@
 #include "ns3/mobility-module.h"
 #include "ns3/wifi-module.h"
 #include "ns3/applications-module.h"
+#include "monadcount_sim/core/ScenarioEnvironment.hpp"
 
 using namespace ns3;
 
@@ -14,7 +15,7 @@ NS_LOG_COMPONENT_DEFINE("PedestrianWifiSim");
 BasicExperiment::BasicExperiment()
         : m_numPedestrians(10), m_simulationTime(60.0), m_roomLength(50.0), m_roomWidth(30.0) {}
 
-void BasicExperiment::Run(ScenarioEnvironment &env) {
+void BasicExperiment::Run(monadcount_sim::core::ScenarioEnvironment &env) {
     NodeContainer wifiStaNodes;
     wifiStaNodes.Create(m_numPedestrians);
 

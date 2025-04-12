@@ -1,7 +1,6 @@
 #include "DoorToDoorExperiment.hpp"
 #include "ns3/simulator.h"
 #include "ns3/log.h"
-#include "ScenarioEnvironment.hpp"
 
 NS_LOG_COMPONENT_DEFINE ("DoorToDoorExperiment");
 
@@ -10,7 +9,7 @@ DoorToDoorExperiment::DoorToDoorExperiment()
     // Initialization if needed
 }
 
-void DoorToDoorExperiment::Run(ScenarioEnvironment &env)
+void DoorToDoorExperiment::Run(monadcount_sim::core::ScenarioEnvironment &env)
 {
     NS_LOG_INFO("Running Experiment: Door-to-Door");
 
