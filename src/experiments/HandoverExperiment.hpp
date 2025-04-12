@@ -14,6 +14,7 @@
 #include "ns3/mobility-module.h"
 #include "ns3/wifi-module.h"
 #include "ns3/applications-module.h"
+#include <map>
 
 class HandoverExperiment : public monadcount_sim::core::Scenario
 {
@@ -50,6 +51,10 @@ private:
     bool m_handoverTriggeredAP1;
     bool m_handoverTriggeredAP2;
 
+    std::map<uint32_t, int> m_nodeAssociation;
+    std::map<uint32_t, bool> m_nodeTriggered;
+
+
     // Animation interface pointer for NetAnim.
     ns3::AnimationInterface* m_anim;
 
@@ -61,9 +66,8 @@ private:
     void SetupInternet();
     void SetupApplications();
     void SetupTracing();
+    void RestoreNodeTriggered(uint32_t nodeId);
     void CheckRssiAndTriggerHandover();
-    void RestoreBeaconIntervalForAP1();
-    void RestoreBeaconIntervalForAP2();
 };
 
 #endif // MONADCOUNT_SIM_HANDOVEREXPERIMENT_HPP

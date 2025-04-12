@@ -3,6 +3,7 @@
 #include "ns3/ipv4-global-routing-helper.h"
 #include <cmath>
 #include <string>
+#include <map>
 
 using namespace ns3;
 
@@ -16,16 +17,15 @@ HandoverExperiment::HandoverExperiment ()
           m_handoverMargin(5.0),
           m_txPower_dBm(20.0),
           m_pathLossExponent(3.0),
-          m_handoverTriggeredAP1(false),
-          m_handoverTriggeredAP2(false),
           m_anim(nullptr)
 {
+    // The maps m_nodeAssociation and m_nodeTriggered are initialized later in SetupNodes.
 }
 
 void
 HandoverExperiment::Run(monadcount_sim::core::ScenarioEnvironment &env)
 {
-    NS_LOG_INFO("Setting up reimplemented RSSI-based Handover Experiment...");
+    NS_LOG_INFO("Setting up RSSI-based Handover Experiment...");
 
     SetupNodes();
     SetupWifi();
@@ -34,14 +34,14 @@ HandoverExperiment::Run(monadcount_sim::core::ScenarioEnvironment &env)
     SetupApplications();
     SetupTracing();
 
-    // Schedule the periodic RSSI evaluation and potential handover trigger.
+    // Schedule the periodic per-node handover and color update.
     Simulator::Schedule(Seconds(1.0), &HandoverExperiment::CheckRssiAndTriggerHandover, this);
 
     Simulator::Stop(Seconds(m_simulationTime));
-    NS_LOG_INFO("Running reimplemented Handover Simulation...");
+    NS_LOG_INFO("Running Handover Simulation...");
     Simulator::Run();
     Simulator::Destroy();
-    NS_LOG_INFO("Reimplemented Handover Simulation complete.");
+    NS_LOG_INFO("Handover Simulation complete.");
 }
 
 double
@@ -68,6 +68,18 @@ HandoverExperiment::SetupNodes()
     uint32_t numGroupB = m_numPedestrians - numGroupA;
     m_groupA.Create(numGroupA);
     m_groupB.Create(numGroupB);
+
+    // Initialize per-node association and triggered maps.
+    for (uint32_t i = 0; i < m_groupA.GetN(); ++i) {
+        uint32_t nodeId = m_groupA.Get(i)->GetId();
+        m_nodeAssociation[nodeId] = 1; // Group A initially with AP1.
+        m_nodeTriggered[nodeId] = false;
+    }
+    for (uint32_t i = 0; i < m_groupB.GetN(); ++i) {
+        uint32_t nodeId = m_groupB.Get(i)->GetId();
+        m_nodeAssociation[nodeId] = 2; // Group B initially with AP2.
+        m_nodeTriggered[nodeId] = false;
+    }
 }
 
 void
@@ -114,19 +126,17 @@ HandoverExperiment::SetupWifi()
 void
 HandoverExperiment::SetupMobility()
 {
-    // (a) Set AP positions at opposite sides of the room.
+    // (a) Set AP positions at opposite sides.
     MobilityHelper mobilityAp;
     mobilityAp.SetMobilityModel("ns3::ConstantPositionMobilityModel");
     mobilityAp.Install(m_wifiApNodes);
     Ptr<MobilityModel> apMob1 = m_wifiApNodes.Get(0)->GetObject<MobilityModel>();
-    // Place AP1 near the left end.
-    apMob1->SetPosition(Vector(5.0, m_roomWidth / 2.0, 2.0));
+    apMob1->SetPosition(Vector(5.0, m_roomWidth / 2.0, 2.0)); // AP1 near left.
     Ptr<MobilityModel> apMob2 = m_wifiApNodes.Get(1)->GetObject<MobilityModel>();
-    // Place AP2 near the right end.
-    apMob2->SetPosition(Vector(45.0, m_roomWidth / 2.0, 2.0));
+    apMob2->SetPosition(Vector(45.0, m_roomWidth / 2.0, 2.0)); // AP2 near right.
 
     // (b) Set pedestrian mobility.
-    // Group A: Starting at the left end, moving to the right.
+    // Group A: Start at left, move right.
     MobilityHelper mobilityGroupA;
     mobilityGroupA.SetMobilityModel("ns3::ConstantVelocityMobilityModel");
     mobilityGroupA.SetPositionAllocator("ns3::RandomRectanglePositionAllocator",
@@ -134,7 +144,7 @@ HandoverExperiment::SetupMobility()
                                         "Y", StringValue("ns3::UniformRandomVariable[Min=5.0|Max=25.0]"));
     mobilityGroupA.Install(m_groupA);
 
-    // Group B: Starting at the right end, moving to the left.
+    // Group B: Start at right, move left.
     MobilityHelper mobilityGroupB;
     mobilityGroupB.SetMobilityModel("ns3::ConstantVelocityMobilityModel");
     mobilityGroupB.SetPositionAllocator("ns3::RandomRectanglePositionAllocator",
@@ -142,23 +152,19 @@ HandoverExperiment::SetupMobility()
                                         "Y", StringValue("ns3::UniformRandomVariable[Min=5.0|Max=25.0]"));
     mobilityGroupB.Install(m_groupB);
 
-    // Set group velocities.
-    // Group A: moves rightward.
+    // Set individual velocities.
     for (uint32_t i = 0; i < m_groupA.GetN(); ++i)
     {
         Ptr<ConstantVelocityMobilityModel> cvm = m_groupA.Get(i)->GetObject<ConstantVelocityMobilityModel>();
-        if (cvm)
-        {
-            cvm->SetVelocity(Vector(1.0, 0.0, 0.0)); // Pure rightward
+        if (cvm) {
+            cvm->SetVelocity(Vector(1.0, 0.0, 0.0)); // Rightward.
         }
     }
-    // Group B: moves leftward.
     for (uint32_t i = 0; i < m_groupB.GetN(); ++i)
     {
         Ptr<ConstantVelocityMobilityModel> cvm = m_groupB.Get(i)->GetObject<ConstantVelocityMobilityModel>();
-        if (cvm)
-        {
-            cvm->SetVelocity(Vector(-1.0, 0.0, 0.0)); // Pure leftward
+        if (cvm) {
+            cvm->SetVelocity(Vector(-1.0, 0.0, 0.0)); // Leftward.
         }
     }
 }
@@ -174,10 +180,7 @@ HandoverExperiment::SetupInternet()
     Ipv4AddressHelper address;
     address.SetBase("10.1.1.0", "255.255.255.0");
 
-    // Assign IP addresses to AP devices using the stored NetDeviceContainer.
     Ipv4InterfaceContainer apInterfaces = address.Assign(m_apDevices);
-
-    // Populate routing tables.
     Ipv4GlobalRoutingHelper::PopulateRoutingTables();
 }
 
@@ -187,7 +190,6 @@ HandoverExperiment::SetupApplications()
     uint16_t echoPort = 7;
     UdpEchoServerHelper echoServer(echoPort);
 
-    // Install UDP Echo Servers on both AP nodes.
     ApplicationContainer serverApp1 = echoServer.Install(m_wifiApNodes.Get(0));
     ApplicationContainer serverApp2 = echoServer.Install(m_wifiApNodes.Get(1));
     serverApp1.Start(Seconds(0.0));
@@ -195,8 +197,6 @@ HandoverExperiment::SetupApplications()
     serverApp2.Start(Seconds(0.0));
     serverApp2.Stop(Seconds(m_simulationTime));
 
-    // Configure UDP Echo Clients on the pedestrian nodes.
-    // Group A uses AP1 (10.1.1.1) and Group B uses AP2 (10.1.1.2).
     UdpEchoClientHelper echoClient1(Ipv4Address("10.1.1.1"), echoPort);
     echoClient1.SetAttribute("MaxPackets", UintegerValue(4294967295u));
     echoClient1.SetAttribute("Interval", TimeValue(Seconds(1.0)));
@@ -227,101 +227,86 @@ HandoverExperiment::SetupTracing()
 {
     // Create NetAnim XML output.
     m_anim = new AnimationInterface("data/handover/netanim.xml");
-    // Set fixed colors for AP nodes.
-    m_anim->UpdateNodeColor(m_wifiApNodes.Get(0)->GetId(), 0, 0, 255);   // Dark blue for AP1.
-    m_anim->UpdateNodeColor(m_wifiApNodes.Get(1)->GetId(), 255, 0, 0);   // Dark red for AP2.
+    // Fixed colors for AP nodes.
+    m_anim->UpdateNodeColor(m_wifiApNodes.Get(0)->GetId(), 0, 0, 255);   // Dark blue.
+    m_anim->UpdateNodeColor(m_wifiApNodes.Get(1)->GetId(), 255, 0, 0);   // Dark red.
 
-    // Enable PCAP generation for each AP device and each station device.
-    YansWifiPhyHelper wifiPhyHelper; // Use a local instance to call EnablePcap for each device.
-    // Iterate over AP devices.
+    // Enable PCAP generation.
+    YansWifiPhyHelper wifiPhyHelper;
     for (uint32_t i = 0; i < m_apDevices.GetN(); ++i)
     {
         std::string fileName = "data/handover/ap_" + std::to_string(i) + ".pcap";
-        wifiPhyHelper.EnablePcap(fileName, m_apDevices.Get(i), true,
-                                 YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
+        wifiPhyHelper.EnablePcap(fileName, m_apDevices.Get(i), true, YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
     }
-    // Iterate over station devices.
     for (uint32_t i = 0; i < m_staDevices.GetN(); ++i)
     {
         std::string fileName = "data/handover/sta_" + std::to_string(i) + ".pcap";
-        wifiPhyHelper.EnablePcap(fileName, m_staDevices.Get(i), true,
-                                 YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
+        wifiPhyHelper.EnablePcap(fileName, m_staDevices.Get(i), true, YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
     }
 }
 
 void
-HandoverExperiment::RestoreBeaconIntervalForAP1()
+HandoverExperiment::RestoreNodeTriggered(uint32_t nodeId)
 {
-    NS_LOG_INFO("Restoring AP1 beacon transmissions.");
-    if (m_ap1Mac)
-    {
-        m_ap1Mac->SetBeaconInterval(Seconds(0.1024));
-    }
-    m_handoverTriggeredAP1 = false;
-}
-
-void
-HandoverExperiment::RestoreBeaconIntervalForAP2()
-{
-    NS_LOG_INFO("Restoring AP2 beacon transmissions.");
-    if (m_ap2Mac)
-    {
-        m_ap2Mac->SetBeaconInterval(Seconds(0.1024));
-    }
-    m_handoverTriggeredAP2 = false;
+    m_nodeTriggered[nodeId] = false;
 }
 
 void
 HandoverExperiment::CheckRssiAndTriggerHandover()
 {
-    // Retrieve positions of AP nodes.
+    // Retrieve AP positions.
     Vector ap1Pos = m_wifiApNodes.Get(0)->GetObject<MobilityModel>()->GetPosition();
     Vector ap2Pos = m_wifiApNodes.Get(1)->GetObject<MobilityModel>()->GetPosition();
 
-    // Check for Group A: initially associated with AP1.
-    uint32_t triggerCountA = 0;
-    for (uint32_t i = 0; i < m_groupA.GetN(); ++i)
+    // Combine pedestrian nodes.
+    NodeContainer allPedestrians;
+    allPedestrians.Add(m_groupA);
+    allPedestrians.Add(m_groupB);
+
+    for (uint32_t i = 0; i < allPedestrians.GetN(); ++i)
     {
-        Ptr<Node> node = m_groupA.Get(i);
+        Ptr<Node> node = allPedestrians.Get(i);
+        uint32_t nodeId = node->GetId();
         Vector pos = node->GetObject<MobilityModel>()->GetPosition();
-        double rssiAp1 = EstimateRssi(pos, ap1Pos);
-        double rssiAp2 = EstimateRssi(pos, ap2Pos);
-        if (rssiAp2 > (rssiAp1 + m_handoverMargin))
+        double rssi1 = EstimateRssi(pos, ap1Pos);
+        double rssi2 = EstimateRssi(pos, ap2Pos);
+        int currentAssociation = m_nodeAssociation[nodeId];
+
+        if (currentAssociation == 1)
         {
-            triggerCountA++;
+            // Currently associated with AP1.
+            if (rssi2 > (rssi1 + m_handoverMargin) && !m_nodeTriggered[nodeId])
+            {
+                NS_LOG_INFO("Node " << nodeId << " handing over from AP1 to AP2.");
+                m_nodeAssociation[nodeId] = 2;
+                m_nodeTriggered[nodeId] = true;
+                m_anim->UpdateNodeColor(nodeId, 255, 150, 150); // Light red.
+                Simulator::Schedule(Seconds(5.0), &HandoverExperiment::RestoreNodeTriggered, this, nodeId);
+            }
+            else
+            {
+                m_anim->UpdateNodeColor(nodeId, 150, 150, 255); // Ensure light blue if still with AP1.
+            }
+        }
+        else if (currentAssociation == 2)
+        {
+            // Currently associated with AP2.
+            if (rssi1 > (rssi2 + m_handoverMargin) && !m_nodeTriggered[nodeId])
+            {
+                NS_LOG_INFO("Node " << nodeId << " handing over from AP2 to AP1.");
+                m_nodeAssociation[nodeId] = 1;
+                m_nodeTriggered[nodeId] = true;
+                m_anim->UpdateNodeColor(nodeId, 150, 150, 255); // Light blue.
+                Simulator::Schedule(Seconds(5.0), &HandoverExperiment::RestoreNodeTriggered, this, nodeId);
+            }
+            else
+            {
+                m_anim->UpdateNodeColor(nodeId, 255, 150, 150); // Ensure light red if still with AP2.
+            }
         }
     }
-    if (triggerCountA > (m_groupA.GetN() / 2) && !m_handoverTriggeredAP1)
-    {
-        NS_LOG_INFO("Handover Triggered for Group A: RSSI favors AP2 over AP1.");
-        // Set a long beacon interval (≈5 s) to simulate handover by disabling AP1 beacons.
-        m_ap1Mac->SetBeaconInterval(Seconds(4883 * 0.001024));
-        m_handoverTriggeredAP1 = true;
-        Simulator::Schedule(Seconds(5.0), &HandoverExperiment::RestoreBeaconIntervalForAP1, this);
-    }
 
-    // Check for Group B: initially associated with AP2.
-    uint32_t triggerCountB = 0;
-    for (uint32_t i = 0; i < m_groupB.GetN(); ++i)
-    {
-        Ptr<Node> node = m_groupB.Get(i);
-        Vector pos = node->GetObject<MobilityModel>()->GetPosition();
-        double rssiAp2 = EstimateRssi(pos, ap2Pos);
-        double rssiAp1 = EstimateRssi(pos, ap1Pos);
-        if (rssiAp1 > (rssiAp2 + m_handoverMargin))
-        {
-            triggerCountB++;
-        }
-    }
-    if (triggerCountB > (m_groupB.GetN() / 2) && !m_handoverTriggeredAP2)
-    {
-        NS_LOG_INFO("Handover Triggered for Group B: RSSI favors AP1 over AP2.");
-        m_ap2Mac->SetBeaconInterval(Seconds(4883 * 0.001024));
-        m_handoverTriggeredAP2 = true;
-        Simulator::Schedule(Seconds(5.0), &HandoverExperiment::RestoreBeaconIntervalForAP2, this);
-    }
-
-    // Reschedule this function every second until the simulation ends.
+    // Reschedule check every second.
     if (Simulator::Now().GetSeconds() < m_simulationTime)
     {
         Simulator::Schedule(Seconds(1.0), &HandoverExperiment::CheckRssiAndTriggerHandover, this);
