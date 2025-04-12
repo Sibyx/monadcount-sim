@@ -1,17 +1,14 @@
-#include "ScenarioEnvironmentBuilder.hpp"
+#include <monadcount_sim/core/ScenarioEnvironmentBuilder.hpp>
 #include "ns3/node.h"
 #include "ns3/mobility-helper.h"
 #include "ns3/vector.h"
 #include "ns3/log.h"
+#include "monadcount_sim/models/PointGeometry.hpp"
 
-#include "Category.hpp"
-#include "Geometry.hpp"
-#include "PointGeometry.hpp"
-#include "PolygonGeometry.hpp"
 
 NS_LOG_COMPONENT_DEFINE ("ScenarioEnvironmentBuilder");
 
-std::unique_ptr<ScenarioEnvironment> ScenarioEnvironmentBuilder::Build(const std::vector<std::unique_ptr<Feature>> &features)
+std::unique_ptr<monadcount_sim::core::ScenarioEnvironment> monadcount_sim::core::ScenarioEnvironmentBuilder::Build(const std::vector<std::unique_ptr<monadcount_sim::models::Feature>> &features)
 {
     NS_LOG_INFO ("Building NS-3 Environment from Features...");
     auto env = std::make_unique<ScenarioEnvironment>();
@@ -21,23 +18,23 @@ std::unique_ptr<ScenarioEnvironment> ScenarioEnvironmentBuilder::Build(const std
     {
         switch (f->getCategory().getType())
         {
-            case Category::ACCESS_POINT:
+            case models::Category::ACCESS_POINT:
                 createApNode(*f, *env);
                 break;
-            case Category::SNIFFER:
+            case models::Category::SNIFFER:
                 createSnifferNode(*f, *env);
                 break;
-            case Category::TERMINAL:
+            case models::Category::TERMINAL:
                 createTerminalNode(*f, *env);
                 break;
-            case Category::WALL:
-            case Category::TABLE:
+            case models::Category::WALL:
+            case models::Category::TABLE:
                 createObstacle(*f, *env);
                 break;
-            case Category::SEAT:
+            case models::Category::SEAT:
                 createSeat(*f, *env);
                 break;
-            case Category::DOOR:
+            case models::Category::DOOR:
                 createDoor(*f, *env);
                 break;
             default:
@@ -50,14 +47,14 @@ std::unique_ptr<ScenarioEnvironment> ScenarioEnvironmentBuilder::Build(const std
     return env;
 }
 
-void ScenarioEnvironmentBuilder::createApNode(const Feature &feature, ScenarioEnvironment &env)
+void monadcount_sim::core::ScenarioEnvironmentBuilder::createApNode(const models::Feature &feature, ScenarioEnvironment &env)
 {
     ns3::Ptr<ns3::Node> node = ns3::CreateObject<ns3::Node>();
 
     // If the feature has a point geometry, use it to set the node position.
     if (feature.getGeometry() && feature.getGeometry()->getType() == "Point")
     {
-        auto pt = dynamic_cast<const PointGeometry*>(feature.getGeometry());
+        auto pt = dynamic_cast<const models::PointGeometry*>(feature.getGeometry());
         if (pt)
         {
             ns3::Ptr<ns3::ListPositionAllocator> posAlloc = ns3::CreateObject<ns3::ListPositionAllocator> ();
@@ -76,13 +73,13 @@ void ScenarioEnvironmentBuilder::createApNode(const Feature &feature, ScenarioEn
     NS_LOG_DEBUG ("AP node created. Total APs: " << env.apNodes.GetN());
 }
 
-void ScenarioEnvironmentBuilder::createSnifferNode(const Feature &feature, ScenarioEnvironment &env)
+void monadcount_sim::core::ScenarioEnvironmentBuilder::createSnifferNode(const models::Feature &feature, ScenarioEnvironment &env)
 {
     ns3::Ptr<ns3::Node> node = ns3::CreateObject<ns3::Node>();
 
     if (feature.getGeometry() && feature.getGeometry()->getType() == "Point")
     {
-        auto pt = dynamic_cast<const PointGeometry*>(feature.getGeometry());
+        auto pt = dynamic_cast<const models::PointGeometry*>(feature.getGeometry());
         if (pt)
         {
             ns3::Ptr<ns3::ListPositionAllocator> posAlloc = ns3::CreateObject<ns3::ListPositionAllocator> ();
@@ -102,13 +99,13 @@ void ScenarioEnvironmentBuilder::createSnifferNode(const Feature &feature, Scena
     NS_LOG_DEBUG ("Sniffer node created. Total sniffers: " << env.snifferNodes.GetN());
 }
 
-void ScenarioEnvironmentBuilder::createTerminalNode(const Feature &feature, ScenarioEnvironment &env)
+void monadcount_sim::core::ScenarioEnvironmentBuilder::createTerminalNode(const models::Feature &feature, ScenarioEnvironment &env)
 {
     ns3::Ptr<ns3::Node> node = ns3::CreateObject<ns3::Node>();
 
     if (feature.getGeometry() && feature.getGeometry()->getType() == "Point")
     {
-        auto pt = dynamic_cast<const PointGeometry*>(feature.getGeometry());
+        auto pt = dynamic_cast<const models::PointGeometry*>(feature.getGeometry());
         if (pt)
         {
             ns3::Ptr<ns3::ListPositionAllocator> posAlloc = ns3::CreateObject<ns3::ListPositionAllocator> ();
@@ -128,7 +125,7 @@ void ScenarioEnvironmentBuilder::createTerminalNode(const Feature &feature, Scen
     NS_LOG_DEBUG ("Terminal node created. Total terminals: " << env.terminalNodes.GetN());
 }
 
-void ScenarioEnvironmentBuilder::createObstacle(const Feature &feature, ScenarioEnvironment &env)
+void monadcount_sim::core::ScenarioEnvironmentBuilder::createObstacle(const models::Feature &feature, ScenarioEnvironment &env)
 {
     Obstacle obs;
     obs.id = feature.getId();
@@ -137,14 +134,14 @@ void ScenarioEnvironmentBuilder::createObstacle(const Feature &feature, Scenario
     NS_LOG_DEBUG ("Obstacle created with id " << obs.id << ". Total obstacles: " << env.obstacles.size());
 }
 
-void ScenarioEnvironmentBuilder::createSeat(const Feature &feature, ScenarioEnvironment &env)
+void monadcount_sim::core::ScenarioEnvironmentBuilder::createSeat(const models::Feature &feature, ScenarioEnvironment &env)
 {
     Seat seat;
     seat.id = feature.getId();
 
     if (feature.getGeometry() && feature.getGeometry()->getType() == "Point")
     {
-        auto pt = dynamic_cast<const PointGeometry*>(feature.getGeometry());
+        auto pt = dynamic_cast<const models::PointGeometry*>(feature.getGeometry());
         if (pt)
         {
             seat.x = pt->point.x;
@@ -157,14 +154,14 @@ void ScenarioEnvironmentBuilder::createSeat(const Feature &feature, ScenarioEnvi
     NS_LOG_DEBUG ("Seat created with id " << seat.id << ". Total seats: " << env.seats.size());
 }
 
-void ScenarioEnvironmentBuilder::createDoor(const Feature &feature, ScenarioEnvironment &env)
+void monadcount_sim::core::ScenarioEnvironmentBuilder::createDoor(const models::Feature &feature, ScenarioEnvironment &env)
 {
     Door door;
     door.id = feature.getId();
 
     if (feature.getGeometry() && feature.getGeometry()->getType() == "Point")
     {
-        auto pt = dynamic_cast<const PointGeometry*>(feature.getGeometry());
+        auto pt = dynamic_cast<const models::PointGeometry*>(feature.getGeometry());
         if (pt)
         {
             door.x = pt->point.x;

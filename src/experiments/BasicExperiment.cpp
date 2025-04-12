@@ -1,3 +1,5 @@
+// NS-3 Simulation: Pedestrian Wi-Fi Mobility with Association and RSSI
+#include <ns3/animation-interface.h>
 #include "BasicExperiment.hpp"
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
@@ -5,9 +7,7 @@
 #include "ns3/mobility-module.h"
 #include "ns3/wifi-module.h"
 #include "ns3/applications-module.h"
-
-// If you have a "ScenarioEnvironment.hpp" or other headers, include them here.
-// #include "ScenarioEnvironment.hpp"
+#include "monadcount_sim/core/ScenarioEnvironment.hpp"
 
 using namespace ns3;
 
@@ -21,7 +21,7 @@ BasicExperiment::BasicExperiment()
 {
 }
 
-void BasicExperiment::Run(ScenarioEnvironment &env)
+void BasicExperiment::Run(monadcount_sim::core::ScenarioEnvironment &env)
 {
     // --------------------------------------------------
     // 1) Create Nodes
@@ -208,6 +208,7 @@ void BasicExperiment::Run(ScenarioEnvironment &env)
     // We'll enable pcap on the device(s) for each AP
     phy1.EnablePcap("pedestrian_wifi_ap1", apDevice1);
     phy2.EnablePcap("pedestrian_wifi_ap2", apDevice2);
+    AnimationInterface anim("netanim.xml");
 
     // --------------------------------------------------
     // 8) Run

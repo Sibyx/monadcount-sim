@@ -2,11 +2,12 @@
 PROJECT_ROOT := $(shell pwd)
 NS3_SRC_DIR := $(PROJECT_ROOT)/extern/ns3-src
 NS3_DIST_DIR := $(PROJECT_ROOT)/extern/ns3-dist
+NETANIM_DIR := $(PROJECT_ROOT)/extern/netanim
 BUILD_DIR := $(PROJECT_ROOT)/build
 BIN_DIR := $(PROJECT_ROOT)/bin
 
 # Default target
-all: ns3 build
+all: ns3 netanim build
 
 # Build NS-3
 ns3:
@@ -31,4 +32,4 @@ clean-all: clean
 	cd $(NS3_SRC_DIR) && ./ns3 clean
 	rm -rf $(NS3_DIST_DIR)
 
-.PHONY: all ns3 build clean clean-all
+.PHONY: all ns3 netanim build clean clean-all

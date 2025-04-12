@@ -1,16 +1,16 @@
-// src/experiments/BasicExperiment.hpp
 #ifndef MONADCOUNT_SIM_BASICEXPERIMENT_HPP
 #define MONADCOUNT_SIM_BASICEXPERIMENT_HPP
 
-#include "Scenario.hpp"
 
-class BasicExperiment : public Scenario {
+#include "monadcount_sim/core/Scenario.hpp"
+
+class BasicExperiment : public monadcount_sim::core::Scenario {
 public:
     BasicExperiment();
     ~BasicExperiment() override = default;
 
 protected:
-    void Run(ScenarioEnvironment& env) override;
+    void Run(monadcount_sim::core::ScenarioEnvironment& env) override;
 
 private:
     uint32_t m_numPedestrians;
