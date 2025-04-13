@@ -2,7 +2,7 @@ name: Run Experiments
 
 on:
   push:
-    branches: [main]
+    branches: [feature/cicd]
   pull_request:
 
 jobs:
