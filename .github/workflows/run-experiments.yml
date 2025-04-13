@@ -1,0 +1,49 @@
+name: Run Experiments
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y cmake g++ python3 python3-pip libxml2-utils \
+            openmpi-bin libopenmpi-dev qtbase6-dev qt6-qmake libq65svg5-dev
+
+      - name: Build Core (NS-3 etc.)
+        run: make ns3
+
+      - name: Build MonadCountSim
+        run: make build
+
+      - name: List Available Scenarios
+        id: list
+        run: |
+          ./build/bin/monadcount_sim --list-scenarios > scenario_list.txt
+          cat scenario_list.txt
+          echo "scenarios=$(paste -sd, scenario_list.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Run All Scenarios
+        run: |
+          IFS=',' read -ra SCENARIOS <<< "${{ steps.list.outputs.scenarios }}"
+          for scenario in "${SCENARIOS[@]}"; do
+            echo "Running scenario: $scenario"
+            ./build/bin/monadcount_sim --scenario "$scenario"
+          done
+
+      - name: Upload Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: experiment-results
+          path: data/
