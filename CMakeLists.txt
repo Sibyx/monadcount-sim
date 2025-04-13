@@ -47,6 +47,7 @@ target_link_libraries(monadcount_sim
         ns3::applications
         ns3::wifi
         ns3::netanim
+        ns3::netsimulyzer
 
         # Simulation libraries:
         monadcount_sim::factories_pedestrians

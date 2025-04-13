@@ -2,7 +2,6 @@ name: Run Experiments
 
 on:
   push:
-    branches: [feature/cicd]
   pull_request:
 
 jobs:
@@ -18,10 +17,21 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt update
-          sudo apt install -y cmake g++ python3 python3-pip libxml2-utils \
-            openmpi-bin libopenmpi-dev qt6-base-dev
+          sudo apt install -y cmake g++ python3 python3-pip libxml2-utils openmpi-bin libopenmpi-dev qt6-base-dev
+
+      # Cache NS-3 build output based on branch and key files
+      - name: Cache NS-3 Installation
+        uses: actions/cache@v4
+        id: ns3-cache
+        with:
+          path: extern/ns3-dist
+          key: ns3-${{ runner.os }}-${{ github.ref_name }}-${{ hashFiles('Makefile', 'extern/ns3-src/**') }}
+          restore-keys: |
+            ns3-${{ runner.os }}-${{ github.ref_name }}-
+            ns3-${{ runner.os }}-
 
       - name: Build Core (NS-3 etc.)
+        if: steps.ns3-cache.outputs.cache-hit != 'true'
         run: make ns3
 
       - name: Build MonadCountSim
