@@ -3,6 +3,7 @@
 #include "experiments/DoorToDoorExperiment.hpp"
 #include "monadcount_sim/core/ScenarioFactory.hpp"
 #include "experiments/HandoverExperiment.hpp"
+#include "experiments/GaussMarkovHandoverExperiment.hpp"
 #include <system_error>
 
 namespace fs = std::filesystem;
@@ -16,6 +17,7 @@ void RegisterScenarios() {
     factory.RegisterScenario<BasicExperiment>("basic");
     factory.RegisterScenario<DoorToDoorExperiment>("doortodoor");
     factory.RegisterScenario<HandoverExperiment>("handover");
+    factory.RegisterScenario<GaussMarkovHandoverExperiment>("gauss-markov-handover");
 }
 
 int main(int argc, char *argv[])

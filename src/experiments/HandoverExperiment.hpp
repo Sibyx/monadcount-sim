@@ -22,7 +22,7 @@ public:
     HandoverExperiment ();
     virtual void Run(monadcount_sim::core::ScenarioEnvironment &env);
 
-private:
+protected:
     // Simulation parameters.
     uint32_t m_numPedestrians;
     double m_simulationTime;
