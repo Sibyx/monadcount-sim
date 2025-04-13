@@ -29,6 +29,16 @@ jobs:
             ns3-${{ runner.os }}-${{ github.ref_name }}-
             ns3-${{ runner.os }}-
 
+      - name: Cache CMake Build Directory
+        uses: actions/cache@v4
+        id: cmake-cache
+        with:
+          path: build
+          key: cmake-${{ runner.os }}-${{ github.ref_name }}-${{ hashFiles('CMakeLists.txt') }}
+          restore-keys: |
+            cmake-${{ runner.os }}-${{ github.ref_name }}-
+            cmake-${{ runner.os }}-
+
       - name: Build Core (NS-3 etc.)
         if: steps.ns3-cache.outputs.cache-hit != 'true'
         run: make ns3
