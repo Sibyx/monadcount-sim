@@ -1,5 +1,8 @@
 // NS-3 Simulation: Pedestrian Wi-Fi Mobility with Association and RSSI
+#ifdef WITH_NETANIM
 #include <ns3/animation-interface.h>
+#endif
+
 #include "BasicExperiment.hpp"
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
@@ -216,8 +219,10 @@ void BasicExperiment::Run(monadcount_sim::core::ScenarioEnvironment &env)
 
     phy2.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
     phy2.EnablePcap("data/basic/ap2", apDevice2);
-    AnimationInterface anim("data/basic/netanim.xml");
-    anim.SetMaxPktsPerTraceFile(500000);
+    #ifdef WITH_NETANIM
+        AnimationInterface anim("data/basic/netanim.xml");
+        anim.SetMaxPktsPerTraceFile(500000);
+    #endif
 
     // --------------------------------------------------
     // 8) Run
