@@ -63,9 +63,11 @@ GaussMarkovHandoverExperiment::SetupMobility()
 void
 GaussMarkovHandoverExperiment::SetupTracing()
 {
+    #ifdef WITH_NETANIM
     m_anim = new AnimationInterface( "data/gauss-markov-handover/netanim.xml");
     m_anim->UpdateNodeColor(m_wifiApNodes.Get(0)->GetId(), 0, 0, 255);
     m_anim->UpdateNodeColor(m_wifiApNodes.Get(1)->GetId(), 255, 0, 0);
+    #endif
 
     YansWifiPhyHelper wifiPhyHelper;
     for (uint32_t i = 0; i < m_apDevices.GetN(); ++i)

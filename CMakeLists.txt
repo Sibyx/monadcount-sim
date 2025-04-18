@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.14)
 project(monadcount-sim LANGUAGES CXX)
 
+option(WITH_NETANIM "Build with NetAnim support" OFF)
+
 # Use C++20
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -18,9 +20,9 @@ find_package(ns3 REQUIRED
         PATHS ${NS3_CMAKE_DIR}
         NO_DEFAULT_PATH  # Avoid using system-wide ns-3 installations
 )
-
-add_subdirectory(${CMAKE_SOURCE_DIR}/extern/netanim)
-
+if(WITH_NETANIM)
+    add_subdirectory(${CMAKE_SOURCE_DIR}/extern/netanim)
+endif()
 # =======================================================================
 # Project Subdirectories
 # =======================================================================
@@ -46,13 +48,17 @@ target_link_libraries(monadcount_sim
         ns3::mobility
         ns3::applications
         ns3::wifi
-        ns3::netanim
 
         # Simulation libraries:
         monadcount_sim::factories_pedestrians
         monadcount_sim::core
         monadcount_sim_experiments
 )
+
+if(WITH_NETANIM)
+    target_link_libraries(monadcount_sim PRIVATE ns3::netanim)
+    target_compile_definitions(monadcount_sim PRIVATE WITH_NETANIM)
+endif()
 
 # =======================================================================
 # Runtime Output & Custom Targets

@@ -15,6 +15,8 @@
 #include "ns3/wifi-module.h"
 #include "ns3/applications-module.h"
 #include <map>
+#include <vector>
+#include <string>
 
 class HandoverExperiment : public monadcount_sim::core::Scenario
 {
@@ -23,42 +25,32 @@ public:
     virtual void Run(monadcount_sim::core::ScenarioEnvironment &env);
 
 protected:
-    // Simulation parameters.
-    uint32_t m_numPedestrians;
-    double m_simulationTime;
-    double m_roomLength;
-    double m_roomWidth;
+    // Configurable parameters
+    uint32_t            m_numAp;
+    uint32_t            m_numPedestrians;
+    double              m_simulationTime;
+    double              m_roomLength;
+    double              m_roomWidth;
+    double              m_handoverMargin;
+    double              m_txPower_dBm;
+    double              m_pathLossExponent;
+    std::string         m_mobilityModel;
 
-    // Additional simulation parameters.
-    double m_handoverMargin;
-    double m_txPower_dBm;
-    double m_pathLossExponent;
+    // Nodes & devices
+    ns3::NodeContainer              m_wifiApNodes;
+    std::vector<ns3::NodeContainer> m_groups;
+    ns3::NetDeviceContainer         m_apDevices;
+    ns3::NetDeviceContainer         m_staDevices;
 
-    // Node containers for APs and pedestrian groups.
-    ns3::NodeContainer m_wifiApNodes;
-    ns3::NodeContainer m_groupA;
-    ns3::NodeContainer m_groupB;
+    // Handover state
+    std::map<uint32_t,int>      m_nodeAssociation;
+    std::map<uint32_t,bool>     m_nodeTriggered;
+    std::map<uint32_t,uint32_t> m_handoverCount;
 
-    // NetDevice containers to store installed devices.
-    ns3::NetDeviceContainer m_apDevices;
-    ns3::NetDeviceContainer m_staDevices;
+    // NetAnim
+    ns3::AnimationInterface*     m_anim;
 
-    // Pointers to the AP MAC objects.
-    ns3::Ptr<ns3::ApWifiMac> m_ap1Mac;
-    ns3::Ptr<ns3::ApWifiMac> m_ap2Mac;
-
-    // Handover trigger flags.
-    bool m_handoverTriggeredAP1;
-    bool m_handoverTriggeredAP2;
-
-    std::map<uint32_t, int> m_nodeAssociation;
-    std::map<uint32_t, bool> m_nodeTriggered;
-
-
-    // Animation interface pointer for NetAnim.
-    ns3::AnimationInterface* m_anim;
-
-    // Private helper functions.
+    // Helpers
     double EstimateRssi(const ns3::Vector &stationPos, const ns3::Vector &apPos) const;
     void SetupNodes();
     void SetupWifi();
