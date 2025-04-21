@@ -20,8 +20,18 @@ BasicExperiment::BasicExperiment()
         : m_numPedestrians(10),
           m_simulationTime(60.0),
           m_roomLength(50.0),
-          m_roomWidth(30.0)
+          m_roomWidth(30.0),
+          // Nakagami, Friis, LogDistance
+          m_propagationModel("Nakagami") // change propagation model here
 {
+}
+
+void BasicExperiment::SetPropagationModel(const std::string& model)
+{
+    if (model != "Nakagami" && model != "Friis" && model != "LogDistance") {
+        NS_ABORT_MSG("BasicExperiment: unknown propagation model " << model);
+    }
+    m_propagationModel = model;
 }
 
 void BasicExperiment::Run(monadcount_sim::core::ScenarioEnvironment &env)
@@ -32,33 +42,38 @@ void BasicExperiment::Run(monadcount_sim::core::ScenarioEnvironment &env)
     NodeContainer wifiApNodes;
     wifiApNodes.Create(2); // two APs
 
-    // First set of station nodes (half)
-    NodeContainer wifiStaNodes1;
     uint32_t half = m_numPedestrians / 2;
+    NodeContainer wifiStaNodes1;
     wifiStaNodes1.Create(half);
-
-    // Second set of station nodes (the rest)
     NodeContainer wifiStaNodes2;
     wifiStaNodes2.Create(m_numPedestrians - half);
 
     // --------------------------------------------------
     // 2) Separate Wi-Fi Channels
     // --------------------------------------------------
-    // AP #1 + its stations on channel1/phy1
-    YansWifiChannelHelper channel1 = YansWifiChannelHelper::Default();
-    channel1.SetPropagationDelay("ns3::ConstantSpeedPropagationDelayModel");
-    channel1.AddPropagationLoss("ns3::NakagamiPropagationLossModel");
-    YansWifiPhyHelper phy1;
-    phy1.SetChannel(channel1.Create());
+    YansWifiChannelHelper channelHelper = YansWifiChannelHelper::Default();
+    channelHelper.SetPropagationDelay("ns3::ConstantSpeedPropagationDelayModel");
 
-    // AP #2 + its stations on channel2/phy2
-    // (Could vary propagation parameters or frequency if desired)
-    YansWifiChannelHelper channel2 = YansWifiChannelHelper::Default();
-    channel2.SetPropagationDelay("ns3::ConstantSpeedPropagationDelayModel");
-    channel2.AddPropagationLoss("ns3::NakagamiPropagationLossModel");
+    if (m_propagationModel == "Nakagami") {
+        channelHelper.AddPropagationLoss("ns3::NakagamiPropagationLossModel");
+    }
+    else if (m_propagationModel == "Friis") {
+        channelHelper.AddPropagationLoss("ns3::FriisPropagationLossModel");
+    }
+    else { // LogDistance
+        channelHelper.AddPropagationLoss("ns3::LogDistancePropagationLossModel");
+    }
+
+    Ptr<YansWifiChannel> channel1 = channelHelper.Create();
+    Ptr<YansWifiChannel> channel2 = channelHelper.Create();
+
+    YansWifiPhyHelper phy1;
+    phy1.SetErrorRateModel("ns3::NistErrorRateModel");
+    phy1.SetChannel(channel1);
 
     YansWifiPhyHelper phy2;
-    phy2.SetChannel(channel2.Create());
+    phy2.SetErrorRateModel("ns3::NistErrorRateModel");
+    phy2.SetChannel(channel2);
 
     // --------------------------------------------------
     // 3) Configure Wi-Fi
@@ -228,7 +243,7 @@ void BasicExperiment::Run(monadcount_sim::core::ScenarioEnvironment &env)
     // 8) Run
     // --------------------------------------------------
     Simulator::Stop(Seconds(m_simulationTime));
-    NS_LOG_INFO("Running Simulation...");
+    NS_LOG_INFO("Running Simulation with " << m_propagationModel << " model...");
     Simulator::Run();
     Simulator::Destroy();
     NS_LOG_INFO("Simulation complete.");
