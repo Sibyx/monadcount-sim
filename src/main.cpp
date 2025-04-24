@@ -5,6 +5,7 @@
 #include "experiments/HandoverExperiment.hpp"
 #include "experiments/GaussMarkovHandoverExperiment.hpp"
 #include <system_error>
+#include <filesystem>
 
 namespace fs = std::filesystem;
 using namespace ns3;
@@ -16,7 +17,7 @@ void RegisterScenarios() {
     factory.RegisterScenario<BasicExperiment>("basic");
     factory.RegisterScenario<DoorToDoorExperiment>("doortodoor");
     factory.RegisterScenario<HandoverExperiment>("handover");
-    factory.RegisterScenario<GaussMarkovHandoverExperiment>("gauss-markov-handover");
+    //factory.RegisterScenario<GaussMarkovHandoverExperiment>("gauss-markov-handover");
 }
 
 int main(int argc, char *argv[])
