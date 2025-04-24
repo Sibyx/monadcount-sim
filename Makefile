@@ -19,7 +19,7 @@ ns3:
 	rm -f $(NS3_SRC_DIR)/contrib/netsimulyzer
 	ln -s $(NETSIMULYZER_DIR) $(NS3_SRC_DIR)/contrib/netsimulyzer
 	cd $(NS3_SRC_DIR) && \
-	./ns3 configure --enable-tests --enable-mpi --prefix $(NS3_DIST_DIR) && \
+	./ns3 configure --enable-tests --enable-mpi --prefix $(NS3_DIST_DIR) --enable-sudo && \
 	./ns3 build && \
 	./ns3 install
 
