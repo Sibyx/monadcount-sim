@@ -23,6 +23,7 @@ protected:
      */
     void SetupMobility();
     void SetupTracing();
+    void SetupVisualization();
 };
 
 #endif //MONADCOUNT_SIM_GAUSSMARKOVHANDOVEREXPERIMENT_HPP

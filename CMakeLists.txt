@@ -30,6 +30,7 @@ endif()
 add_subdirectory(src/core)
 add_subdirectory(src/experiments)
 add_subdirectory(src/factories)
+add_subdirectory(src/wifi)
 
 # =======================================================================
 # Create Executable and Link Libraries
@@ -48,9 +49,12 @@ target_link_libraries(monadcount_sim
         ns3::mobility
         ns3::applications
         ns3::wifi
+        ns3::netanim
+        ns3::netsimulyzer
 
         # Simulation libraries:
         monadcount_sim::factories_pedestrians
+        monadcount_sim::wifi
         monadcount_sim::core
         monadcount_sim_experiments
 )

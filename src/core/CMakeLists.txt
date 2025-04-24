@@ -3,6 +3,7 @@ add_library(monadcount_sim_core
         Scenario.cpp
         ScenarioEnvironmentBuilder.cpp
         ScenarioFactory.cpp
+        VisualizationManager.cpp
 )
 
 target_link_libraries(monadcount_sim_core

@@ -7,3 +7,9 @@
 [submodule "extern/netanim"]
 	path = extern/netanim
 	url = https://gitlab.com/nsnam/netanim.git
+[submodule "extern/netsimulyzer-ns3"]
+	path = extern/netsimulyzer-ns3
+	url = https://github.com/usnistgov/NetSimulyzer-ns3-module
+[submodule "extern/netsimulyzer-gui"]
+	path = extern/netsimulyzer-gui
+	url = https://github.com/usnistgov/NetSimulyzer
