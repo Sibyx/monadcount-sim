@@ -11,7 +11,7 @@ BUILD_DIR := $(PROJECT_ROOT)/build
 BIN_DIR := $(PROJECT_ROOT)/bin
 
 # Default target
-all: ns3 netanim build netsimulyzer-gui
+all: ns3 build netsimulyzer-gui
 
 # Build NS-3
 ns3:
@@ -19,7 +19,7 @@ ns3:
 	rm -f $(NS3_SRC_DIR)/contrib/netsimulyzer
 	ln -s $(NETSIMULYZER_DIR) $(NS3_SRC_DIR)/contrib/netsimulyzer
 	cd $(NS3_SRC_DIR) && \
-	./ns3 configure --enable-tests --enable-mpi --prefix $(NS3_DIST_DIR) --enable-sudo && \
+	./ns3 configure --enable-tests --enable-mpi --prefix $(NS3_DIST_DIR) && \
 	./ns3 build && \
 	./ns3 install
 

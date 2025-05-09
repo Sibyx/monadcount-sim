@@ -17,4 +17,5 @@ target_link_libraries(monadcount_sim_experiments
         ns3::mobility
         ns3::applications
         ns3::wifi
+        ns3::netanim
 )

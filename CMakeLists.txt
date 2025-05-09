@@ -2,10 +2,17 @@ cmake_minimum_required(VERSION 3.14)
 project(monadcount-sim LANGUAGES CXX)
 
 option(WITH_NETANIM "Build with NetAnim support" OFF)
+option(WITH_NETSIMULYZER "Build with NetSimulyzer support" OFF)
 
 # Use C++20
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Disable Clang modules to avoid module cache writes in sandboxed /tmp
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    # Disable Clang modules for system frameworks as well
+    add_compile_options(-fno-modules -fno-implicit-modules -fno-implicit-module-maps)
+endif()
 
 # =======================================================================
 # External Dependencies (Using Git Submodules)
@@ -21,7 +28,12 @@ find_package(ns3 REQUIRED
         NO_DEFAULT_PATH  # Avoid using system-wide ns-3 installations
 )
 if(WITH_NETANIM)
+    # Build the NetAnim GUI application
     add_subdirectory(${CMAKE_SOURCE_DIR}/extern/netanim)
+endif()
+if(WITH_NETSIMULYZER)
+    # Build the NetSimulyzer GUI application
+    add_subdirectory(${CMAKE_SOURCE_DIR}/extern/netsimulyzer-gui)
 endif()
 # =======================================================================
 # Project Subdirectories
@@ -42,15 +54,13 @@ target_link_libraries(monadcount_sim
         # Standard libraries:
         nlohmann_json::nlohmann_json
 
-        # ns-3 libraries:
+        # ns-3 core libraries:
         ns3::core
         ns3::network
         ns3::internet
         ns3::mobility
         ns3::applications
         ns3::wifi
-        ns3::netanim
-        ns3::netsimulyzer
 
         # Simulation libraries:
         monadcount_sim::factories_pedestrians
@@ -60,8 +70,14 @@ target_link_libraries(monadcount_sim
 )
 
 if(WITH_NETANIM)
+    # Link against the ns-3 NetAnim module and enable compile definition
     target_link_libraries(monadcount_sim PRIVATE ns3::netanim)
     target_compile_definitions(monadcount_sim PRIVATE WITH_NETANIM)
+endif()
+if(WITH_NETSIMULYZER)
+    # Link against the ns-3 NetSimulyzer module and enable compile definition
+    target_link_libraries(monadcount_sim PRIVATE ns3::netsimulyzer)
+    target_compile_definitions(monadcount_sim PRIVATE WITH_NETSIMULYZER)
 endif()
 
 # =======================================================================

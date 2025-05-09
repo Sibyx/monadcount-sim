@@ -1,8 +1,12 @@
 #ifndef MONADCOUNT_SIM_VISUALIZATIONMANAGER_HPP
 #define MONADCOUNT_SIM_VISUALIZATIONMANAGER_HPP
 
+#ifdef WITH_NETANIM
 #include <ns3/animation-interface.h>
+#endif
+#ifdef WITH_NETSIMULYZER
 #include <ns3/netsimulyzer-module.h>
+#endif
 #include <ns3/node-container.h>
 #include <ns3/ptr.h>
 #include <map>
@@ -28,8 +32,14 @@ namespace monadcount_sim::core {
         VisualizationManager();
         ~VisualizationManager();
 
+#ifdef WITH_NETANIM
+        // Enable NetAnim visualization output
         void EnableNetAnim(const std::string& filename);
+#endif
+#ifdef WITH_NETSIMULYZER
+        // Enable NetSimulyzer visualization output
         void EnableNetSimulyzer(const std::string& filename);
+#endif
 
         void RegisterGroup(const std::string& groupId,
                            const ns3::NodeContainer& nodes,
@@ -42,11 +52,14 @@ namespace monadcount_sim::core {
         void LogMessage(const std::string& message);
 
     private:
+#ifdef WITH_NETANIM
         ns3::AnimationInterface* m_anim = nullptr;
-
+#endif
+#ifdef WITH_NETSIMULYZER
         ns3::Ptr<ns3::netsimulyzer::Orchestrator> m_orchestrator;
         ns3::Ptr<ns3::netsimulyzer::LogStream> m_logStream;
         std::unique_ptr<ns3::netsimulyzer::NodeConfigurationHelper> m_nodeHelper;
+#endif
 
         struct Group {
             ns3::NodeContainer nodes;

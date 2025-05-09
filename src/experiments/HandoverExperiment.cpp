@@ -244,8 +244,13 @@ void HandoverExperiment::LogHandoverEvent(uint32_t nodeId, int fromAp, int toAp,
 }
 
 void HandoverExperiment::SetupVisualization() {
+    // Enable visualizations based on build configuration
+#ifdef WITH_NETANIM
     m_viz.EnableNetAnim("data/handover/netanim.xml");
+#endif
+#ifdef WITH_NETSIMULYZER
     m_viz.EnableNetSimulyzer("data/handover/simulyzer.json");
+#endif
 
     monadcount_sim::core::VisualizationManager::GroupVisualConfig apConfig;
     apConfig.labelPrefix = "AP";
